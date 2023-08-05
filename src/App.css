@@ -1,42 +1,80 @@
-#root {
-  max-width: 1280px;
+main * {
+  /* border: 1px solid red; */
+}
+
+.site-container {
+  display: grid;
+  gap: 2rem;
+  min-height: 100vh;
+  grid-template-rows: 5rem 1fr 5rem;
+  grid-template-areas: "header" "main" "footer";
+}
+
+header {
+  border-bottom: 1px solid grey;
+  grid-area: header;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+main {
+  grid-area: main;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+h1 {
+  font-weight: 400;
+  margin-bottom: 1em;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.content {
+  max-width: 60ch;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.form {
+  max-width: 30em;
+  display: flex;
+  flex-direction: column;
+  gap: 2em;
+  margin-top: 2em;
 }
 
-.card {
-  padding: 2em;
+.input-container {
+  display: flex;
+  flex-direction: column;
 }
 
-.read-the-docs {
-  color: #888;
+footer {
+  border-top: 1px solid grey;
+  grid-area: footer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image {
+  max-width: 25px;
+  margin: 0 0.5em;
+}
+
+.btn {
+  padding: 0.5em 2em;
+  width: 100%;
+}
+
+.secondary {
+    background-color: white;
+    color: blue;
+    border: blue 1px solid;
+}
+
+.primary {
+    background-color: blue;
+    color: white;
+}
+
+input,
+textarea {
+  padding: 0.5em;
 }
