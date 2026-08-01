@@ -1,0 +1,315 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--tap-target);
+  padding-inline: var(--space-5);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  transition: background var(--transition), transform var(--transition), border-color var(--transition);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.btn--secondary {
+  background: var(--bg-elevated);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--text-muted);
+  padding-inline: var(--space-3);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--bg-sunken);
+}
+
+.btn--danger {
+  background: var(--red-500);
+  color: #fff;
+}
+
+.btn--lg {
+  min-height: 60px;
+  font-size: var(--text-lg);
+  padding-inline: var(--space-6);
+}
+
+.btn--block {
+  width: 100%;
+}
+
+.card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-block-end: var(--space-4);
+}
+
+.field__label {
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.field__hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.field__error {
+  font-size: var(--text-xs);
+  color: var(--red-500);
+  font-weight: 600;
+}
+
+.input {
+  inline-size: 100%;
+  min-height: var(--tap-target);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition);
+}
+
+.input:focus {
+  border-color: var(--primary);
+}
+
+.input--area {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: var(--tap-target);
+  cursor: pointer;
+}
+
+.toggle__text {
+  display: flex;
+  flex-direction: column;
+}
+
+.toggle__hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.toggle input {
+  position: absolute;
+  opacity: 0;
+  inline-size: 1px;
+  block-size: 1px;
+}
+
+.toggle__track {
+  flex: none;
+  inline-size: 52px;
+  block-size: 30px;
+  border-radius: var(--radius-pill);
+  background: var(--border-strong);
+  padding: 3px;
+  transition: background var(--transition);
+}
+
+.toggle__thumb {
+  display: block;
+  inline-size: 24px;
+  block-size: 24px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform var(--transition);
+}
+
+.toggle input:checked ~ .toggle__track {
+  background: var(--primary);
+}
+
+.toggle input:checked ~ .toggle__track .toggle__thumb {
+  /* Logical direction keeps the thumb travelling the right way in RTL. */
+  transform: translateX(calc(22px * -1));
+}
+
+:dir(ltr) .toggle input:checked ~ .toggle__track .toggle__thumb {
+  transform: translateX(22px);
+}
+
+.toggle input:focus-visible ~ .toggle__track {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.segmented {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  background: var(--bg-sunken);
+  border-radius: var(--radius-pill);
+}
+
+.segmented__item {
+  flex: 1;
+  min-height: 40px;
+  padding-inline: var(--space-3);
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: background var(--transition), color var(--transition);
+}
+
+.segmented__item.is-active {
+  background: var(--bg-elevated);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty__icon {
+  font-size: 2.5rem;
+}
+
+.empty__title {
+  font-weight: 600;
+}
+
+.spinner {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-6);
+}
+
+.spinner__dot {
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  border-block-start-color: var(--primary);
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.ring svg {
+  position: absolute;
+  inset: 0;
+}
+
+.ring__value {
+  transition: stroke-dashoffset 500ms cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+.ring__text {
+  font-weight: 700;
+  font-size: var(--text-lg);
+}
+
+.star-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--gold-500) 18%, transparent);
+  color: var(--gold-700);
+  font-weight: 700;
+  font-size: var(--text-sm);
+}
+
+:root[data-theme='dark'] .star-badge {
+  color: var(--gold-300);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .star-badge {
+    color: var(--gold-300);
+  }
+}
+
+.banner {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  border: 1px solid transparent;
+}
+
+.banner--info {
+  background: var(--surface-accent);
+  border-color: var(--brand-300);
+}
+
+.banner--warn {
+  background: color-mix(in srgb, var(--gold-500) 16%, transparent);
+  border-color: var(--gold-500);
+}
+
+.banner--error {
+  background: color-mix(in srgb, var(--red-500) 12%, transparent);
+  border-color: var(--red-500);
+}
+
+.banner--success {
+  background: color-mix(in srgb, var(--green-500) 14%, transparent);
+  border-color: var(--green-500);
+}

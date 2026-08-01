@@ -1,0 +1,96 @@
+import {
+  createContext,
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
+import type { Session } from '@supabase/supabase-js'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { supabase } from '@/lib/supabase'
+import { clearParentUnlock } from '@/lib/pin'
+import type { Profile } from '@/types/db'
+
+type AuthContextValue = {
+  session: Session | null
+  /** True until the initial session lookup finishes, so routes don't flash. */
+  loading: boolean
+  profile: Profile | null
+  profileLoading: boolean
+  familyId: string | null
+  signOut: () => Promise<void>
+  refreshProfile: () => Promise<void>
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null)
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null)
+  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
+
+  useEffect(() => {
+    let active = true
+
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!active) return
+      setSession(data.session)
+      setLoading(false)
+    })
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession)
+      setLoading(false)
+    })
+
+    return () => {
+      active = false
+      subscription.subscription.unsubscribe()
+    }
+  }, [])
+
+  const userId = session?.user.id ?? null
+
+  const profileQuery = useQuery({
+    queryKey: ['profile', userId],
+    enabled: Boolean(userId),
+    queryFn: async (): Promise<Profile | null> => {
+      const { data, error } = await supabase.from('profiles').select('*').maybeSingle()
+      if (error) throw error
+      return data
+    },
+  })
+
+  const signOut = useCallback(async () => {
+    clearParentUnlock()
+    await supabase.auth.signOut()
+    queryClient.clear()
+  }, [queryClient])
+
+  const refreshProfile = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['profile'] })
+  }, [queryClient])
+
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      session,
+      loading,
+      profile: profileQuery.data ?? null,
+      profileLoading: Boolean(userId) && profileQuery.isPending,
+      familyId: profileQuery.data?.family_id ?? null,
+      signOut,
+      refreshProfile,
+    }),
+    [session, loading, profileQuery.data, profileQuery.isPending, userId, signOut, refreshProfile],
+  )
+
+  return <AuthContext value={value}>{children}</AuthContext>
+}
+
+export function useAuth(): AuthContextValue {
+  const value = use(AuthContext)
+  if (!value) throw new Error('useAuth must be used inside <AuthProvider>')
+  return value
+}

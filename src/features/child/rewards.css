@@ -1,0 +1,95 @@
+.balance-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  background: linear-gradient(135deg, var(--gold-300), var(--gold-500));
+  border-color: transparent;
+  color: #3a2a06;
+}
+
+.balance-card .muted {
+  color: #5a4310;
+}
+
+.balance-card__stars {
+  font-size: 2rem;
+}
+
+.balance-card__value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.reward-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-3);
+}
+
+.reward-card {
+  block-size: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+}
+
+.reward-card__icon {
+  font-size: 2.5rem;
+}
+
+.reward-card__title {
+  font-weight: 600;
+}
+
+.mood-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.mood-row button {
+  flex: 1;
+  aspect-ratio: 1;
+  font-size: 1.8rem;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border);
+  background: var(--bg-elevated);
+  transition: transform var(--transition), border-color var(--transition);
+}
+
+.mood-row button.is-active {
+  border-color: var(--primary);
+  transform: scale(1.08);
+}
+
+.journal-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.journal-entry {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.journal-entry__mood {
+  font-size: 1.6rem;
+}
+
+.journal-entry__date {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-weight: 600;
+}

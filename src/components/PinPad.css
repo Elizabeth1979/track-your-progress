@@ -1,0 +1,47 @@
+.pinpad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  text-align: center;
+  padding: var(--space-5);
+}
+
+.pinpad__dots {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.pinpad__dots span {
+  inline-size: 16px;
+  block-size: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  transition: background var(--transition);
+}
+
+.pinpad__dots span.is-filled {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.pinpad__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 76px);
+  gap: var(--space-3);
+}
+
+.pinpad__grid button {
+  block-size: 68px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  transition: transform var(--transition), background var(--transition);
+}
+
+.pinpad__grid button:active {
+  transform: scale(0.94);
+  background: var(--surface-accent);
+}
