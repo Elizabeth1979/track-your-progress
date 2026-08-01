@@ -1,0 +1,32 @@
+.picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.picker__emoji {
+  inline-size: 48px;
+  block-size: 48px;
+  font-size: 1.4rem;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border);
+  background: var(--bg-elevated);
+  transition: border-color var(--transition), transform var(--transition);
+}
+
+.picker__emoji.is-active {
+  border-color: var(--primary);
+  transform: scale(1.06);
+}
+
+.picker__color {
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  box-shadow: inset 0 0 0 2px var(--bg-elevated);
+}
+
+.picker__color.is-active {
+  border-color: var(--text);
+}

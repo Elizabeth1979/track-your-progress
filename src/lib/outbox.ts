@@ -1,0 +1,219 @@
+import Dexie, { type EntityTable } from 'dexie'
+import { supabase } from './supabase'
+
+/**
+ * Offline write queue.
+ *
+ * Child-mode writes never go straight to the network: they are appended here and replayed
+ * in order once a connection exists. Every operation is written to be idempotent on the
+ * server (unique constraints plus ignore-on-conflict), so replaying a batch twice — which
+ * happens whenever a flush dies mid-way — cannot create duplicate completions.
+ */
+
+export type OutboxOperation =
+  | { kind: 'completion.add'; taskId: string; forDate: string; clientId: string }
+  | { kind: 'completion.remove'; taskId: string; forDate: string }
+  | { kind: 'checklist.add'; itemId: string; forDate: string }
+  | { kind: 'checklist.remove'; itemId: string; forDate: string }
+  | { kind: 'journal.save'; childId: string; forDate: string; mood: number | null; note: string }
+
+export type OutboxEntry = {
+  seq: number
+  op: OutboxOperation
+  createdAt: number
+  attempts: number
+  lastError?: string
+}
+
+const db = new Dexie('kidtasks') as Dexie & {
+  outbox: EntityTable<OutboxEntry, 'seq'>
+}
+
+db.version(1).stores({ outbox: '++seq, createdAt' })
+
+export type SyncState = {
+  pending: number
+  syncing: boolean
+  failed: boolean
+}
+
+type Listener = (state: SyncState) => void
+
+const listeners = new Set<Listener>()
+let state: SyncState = { pending: 0, syncing: false, failed: false }
+
+function publish(next: Partial<SyncState>) {
+  state = { ...state, ...next }
+  for (const listener of listeners) listener(state)
+}
+
+export function subscribeToSync(listener: Listener): () => void {
+  listeners.add(listener)
+  listener(state)
+  return () => listeners.delete(listener)
+}
+
+export function getSyncState(): SyncState {
+  return state
+}
+
+async function refreshPendingCount() {
+  publish({ pending: await db.outbox.count() })
+}
+
+export async function enqueue(op: OutboxOperation): Promise<void> {
+  await db.outbox.add({ op, createdAt: Date.now(), attempts: 0 } as OutboxEntry)
+  await refreshPendingCount()
+  void flushOutbox()
+}
+
+async function applyOperation(op: OutboxOperation): Promise<void> {
+  switch (op.kind) {
+    case 'completion.add': {
+      // The DB trigger fills in family/child/stars/status from the task definition.
+      const { error } = await supabase.from('task_completions').upsert(
+        { task_id: op.taskId, for_date: op.forDate, client_id: op.clientId },
+        { onConflict: 'task_id,for_date', ignoreDuplicates: true },
+      )
+      if (error) throw error
+      return
+    }
+    case 'completion.remove': {
+      const { error } = await supabase
+        .from('task_completions')
+        .delete()
+        .eq('task_id', op.taskId)
+        .eq('for_date', op.forDate)
+      if (error) throw error
+      return
+    }
+    case 'checklist.add': {
+      const { error } = await supabase
+        .from('checklist_item_completions')
+        .upsert(
+          { item_id: op.itemId, for_date: op.forDate },
+          { onConflict: 'item_id,for_date', ignoreDuplicates: true },
+        )
+      if (error) throw error
+      return
+    }
+    case 'checklist.remove': {
+      const { error } = await supabase
+        .from('checklist_item_completions')
+        .delete()
+        .eq('item_id', op.itemId)
+        .eq('for_date', op.forDate)
+      if (error) throw error
+      return
+    }
+    case 'journal.save': {
+      const { error } = await supabase.from('journal_entries').upsert(
+        { child_id: op.childId, for_date: op.forDate, mood: op.mood, note: op.note },
+        { onConflict: 'child_id,for_date' },
+      )
+      if (error) throw error
+      return
+    }
+  }
+}
+
+/** Network blips deserve a retry; a rejected row never will and must not block the queue. */
+function isRetryable(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error)
+  if (/failed to fetch|network|timeout|fetch failed/i.test(message)) return true
+  const code = (error as { code?: string } | null)?.code
+  // Postgres constraint/permission errors are permanent; missing code means transport failure.
+  if (!code) return true
+  return code.startsWith('08') || code === '57014'
+}
+
+const MAX_ATTEMPTS = 8
+let inFlight: Promise<void> | null = null
+
+/**
+ * Drains the queue. Concurrent callers share the one in-flight run rather than
+ * returning early, so `await flushOutbox()` always means "syncing has settled".
+ */
+export function flushOutbox(): Promise<void> {
+  if (inFlight) return inFlight
+  if (typeof navigator !== 'undefined' && !navigator.onLine) return Promise.resolve()
+
+  inFlight = runFlush().finally(() => {
+    inFlight = null
+  })
+  return inFlight
+}
+
+async function runFlush(): Promise<void> {
+  publish({ syncing: true })
+  let sawFailure = false
+
+  try {
+    // Strict insertion order: a "remove" queued after an "add" must not overtake it.
+    for (;;) {
+      const entry = await db.outbox.orderBy('seq').first()
+      if (!entry) break
+
+      try {
+        await applyOperation(entry.op)
+        await db.outbox.delete(entry.seq)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        const attempts = entry.attempts + 1
+
+        if (!isRetryable(error) || attempts >= MAX_ATTEMPTS) {
+          // Drop it rather than wedge every later operation behind a permanent failure.
+          await db.outbox.delete(entry.seq)
+          sawFailure = true
+          continue
+        }
+
+        await db.outbox.update(entry.seq, { attempts, lastError: message })
+        sawFailure = true
+        break
+      }
+    }
+  } finally {
+    const pending = await db.outbox.count()
+    publish({ syncing: false, pending, failed: sawFailure })
+  }
+}
+
+export async function clearFailedFlag(): Promise<void> {
+  publish({ failed: false })
+}
+
+export async function pendingOperations(): Promise<OutboxEntry[]> {
+  return db.outbox.orderBy('seq').toArray()
+}
+
+/** Test seam: wipes the queue between test cases. */
+export async function resetOutbox(): Promise<void> {
+  await db.outbox.clear()
+  state = { pending: 0, syncing: false, failed: false }
+}
+
+let started = false
+
+export function startOutboxWorker(): () => void {
+  if (started) return () => {}
+  started = true
+
+  const onOnline = () => void flushOutbox()
+  const onVisible = () => {
+    if (document.visibilityState === 'visible') void flushOutbox()
+  }
+
+  window.addEventListener('online', onOnline)
+  document.addEventListener('visibilitychange', onVisible)
+  const interval = window.setInterval(() => void flushOutbox(), 30_000)
+
+  void refreshPendingCount().then(() => flushOutbox())
+
+  return () => {
+    window.removeEventListener('online', onOnline)
+    document.removeEventListener('visibilitychange', onVisible)
+    window.clearInterval(interval)
+    started = false
+  }
+}
