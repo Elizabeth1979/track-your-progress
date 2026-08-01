@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/app/AuthProvider'
 import { useT } from '@/i18n'
@@ -20,6 +21,7 @@ function nextDraft(index: number): DraftChild {
 export function OnboardingPage() {
   const t = useT()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { session, loading, profile, profileLoading, refreshProfile } = useAuth()
 
   const [familyName, setFamilyName] = useState('')
@@ -81,7 +83,12 @@ export function OnboardingPage() {
       return
     }
 
+    // Joining a family changes the answer to every family-scoped query, and those
+    // queries were already cached (and persisted) as empty from before the family
+    // existed. Without a full invalidation the app keeps serving that empty snapshot,
+    // and a refresh rehydrates it from localStorage rather than refetching.
     await refreshProfile()
+    await queryClient.invalidateQueries()
     void navigate('/child', { replace: true })
   }
 

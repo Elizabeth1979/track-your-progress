@@ -11,6 +11,7 @@ import type { Session } from '@supabase/supabase-js'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { clearParentUnlock } from '@/lib/pin'
+import { ensureCacheOwner, purgePersistedCache } from './queryClient'
 import type { Profile } from '@/types/db'
 
 type AuthContextValue = {
@@ -53,6 +54,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const userId = session?.user.id ?? null
 
+  // Runs before the queries below read anything, so a cache belonging to a different
+  // account is dropped rather than displayed.
+  useEffect(() => {
+    if (loading) return
+    ensureCacheOwner(userId)
+  }, [loading, userId])
+
   const profileQuery = useQuery({
     queryKey: ['profile', userId],
     enabled: Boolean(userId),
@@ -66,8 +74,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     clearParentUnlock()
     await supabase.auth.signOut()
-    queryClient.clear()
-  }, [queryClient])
+    // clear() only empties memory; the persisted copy has to go too or the next
+    // person to sign in on this device rehydrates it.
+    purgePersistedCache()
+  }, [])
 
   const refreshProfile = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ['profile'] })

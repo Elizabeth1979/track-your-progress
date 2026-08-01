@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { describeError, supabase } from '@/lib/supabase'
 import { useAuth } from '@/app/AuthProvider'
 import { useT } from '@/i18n'
@@ -9,6 +10,7 @@ import { AuthShell } from '@/features/auth/AuthShell'
 export function JoinPage() {
   const t = useT()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { code } = useParams()
   const [searchParams] = useSearchParams()
   const token = searchParams.get('t') ?? ''
@@ -58,7 +60,10 @@ export function JoinPage() {
       return
     }
 
+    // Same as onboarding: this user's family-scoped queries were cached as empty
+    // before they belonged to a family, so every one of them is now wrong.
     await refreshProfile()
+    await queryClient.invalidateQueries()
     void navigate('/parent', { replace: true })
   }
 
