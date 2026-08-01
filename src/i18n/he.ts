@@ -66,6 +66,8 @@ export const he = {
     noAccount: 'אין לכם חשבון? הרשמו',
     hasAccount: 'כבר יש לכם חשבון? התחברו',
     passwordHint: 'לפחות 8 תווים',
+    showPassword: 'הצג סיסמה',
+    hidePassword: 'הסתר סיסמה',
     verifyTitle: 'אישור כתובת האימייל',
     verifyBody: 'שלחנו לכם מייל אישור. אשרו אותו ואז התחברו.',
     backToLogin: 'חזרה להתחברות',

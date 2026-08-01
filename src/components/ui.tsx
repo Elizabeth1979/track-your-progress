@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'react'
+import { useT } from '@/i18n'
 import './ui.css'
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -69,6 +71,47 @@ export function TextInput({ className = '', ...rest }: InputHTMLAttributes<HTMLI
 
 export function TextArea({ className = '', ...rest }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return <textarea className={`input input--area ${className}`} {...rest} />
+}
+
+/**
+ * A password field with a reveal toggle. Passwords are Latin-only, but the app runs
+ * RTL, and a masked field gives no clue that the keyboard is still on Hebrew — so
+ * being able to look is the only way to catch it.
+ */
+export function PasswordInput({ className = '', ...rest }: InputHTMLAttributes<HTMLInputElement>) {
+  const t = useT()
+  const [visible, setVisible] = useState(false)
+
+  return (
+    <div className="input-wrap input-wrap--ltr">
+      <input
+        className={`input input--ltr input--with-affix ${className}`}
+        type={visible ? 'text' : 'password'}
+        dir="ltr"
+        {...rest}
+      />
+      <button
+        // Must not be a submit button, or revealing the password would submit the form.
+        type="button"
+        className="input-affix"
+        onClick={() => setVisible((prev) => !prev)}
+        aria-label={visible ? t.auth.hidePassword : t.auth.showPassword}
+        aria-pressed={visible}
+      >
+        <EyeIcon off={visible} />
+      </button>
+    </div>
+  )
+}
+
+function EyeIcon({ off }: { off: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+      {off && <line x1="3" y1="3" x2="21" y2="21" />}
+    </svg>
+  )
 }
 
 export function Toggle({

@@ -115,6 +115,59 @@
   resize: vertical;
 }
 
+/*
+ * Email and password are always Latin, so they are typed and read left-to-right even
+ * though the surrounding form is RTL. Labels stay right-aligned, so the form still
+ * reads as Hebrew.
+ */
+.input--ltr {
+  direction: ltr;
+  text-align: start;
+}
+
+.input-wrap {
+  position: relative;
+}
+
+/*
+ * The wrapper adopts the input's direction so that the input's padding-inline-end and
+ * the button's inset-inline-end resolve to the same side. Without this the wrapper
+ * stays RTL and the button lands opposite the padding reserved for it.
+ */
+.input-wrap--ltr {
+  direction: ltr;
+}
+
+/* Keep the text clear of the reveal button. */
+.input--with-affix {
+  padding-inline-end: calc(var(--tap-target) + var(--space-2));
+}
+
+.input-affix {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: var(--tap-target);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+}
+
+.input-affix:hover {
+  color: var(--text);
+}
+
+.input-affix:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
 .toggle {
   display: flex;
   align-items: center;

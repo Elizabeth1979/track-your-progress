@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase, describeError } from '@/lib/supabase'
 import { useT } from '@/i18n'
-import { Banner, Button, Field, TextInput } from '@/components/ui'
+import { Banner, Button, Field, PasswordInput, TextInput } from '@/components/ui'
 import { AuthShell } from './AuthShell'
 
 export function SignupPage() {
@@ -59,6 +59,8 @@ export function SignupPage() {
           <TextInput
             id="email"
             type="email"
+            className="input--ltr"
+            dir="ltr"
             autoComplete="email"
             required
             value={email}
@@ -66,9 +68,8 @@ export function SignupPage() {
           />
         </Field>
         <Field label={t.auth.password} htmlFor="password" hint={t.auth.passwordHint} error={error}>
-          <TextInput
+          <PasswordInput
             id="password"
-            type="password"
             autoComplete="new-password"
             minLength={8}
             required

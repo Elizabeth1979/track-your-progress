@@ -67,6 +67,8 @@ export const en: Dictionary = {
     noAccount: "Don't have an account? Sign up",
     hasAccount: 'Already have an account? Log in',
     passwordHint: 'At least 8 characters',
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
     verifyTitle: 'Confirm your email',
     verifyBody: 'We sent you a confirmation email. Confirm it, then log in.',
     backToLogin: 'Back to log in',

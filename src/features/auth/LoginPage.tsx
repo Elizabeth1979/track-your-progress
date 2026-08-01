@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase, describeError } from '@/lib/supabase'
 import { useT } from '@/i18n'
-import { Button, Field, TextInput } from '@/components/ui'
+import { Button, Field, PasswordInput, TextInput } from '@/components/ui'
 import { AuthShell } from './AuthShell'
 
 export function LoginPage() {
@@ -46,6 +46,8 @@ export function LoginPage() {
           <TextInput
             id="email"
             type="email"
+            className="input--ltr"
+            dir="ltr"
             autoComplete="email"
             required
             value={email}
@@ -53,9 +55,8 @@ export function LoginPage() {
           />
         </Field>
         <Field label={t.auth.password} htmlFor="password" error={error}>
-          <TextInput
+          <PasswordInput
             id="password"
-            type="password"
             autoComplete="current-password"
             required
             value={password}
