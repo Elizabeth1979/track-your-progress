@@ -33,12 +33,15 @@ export function purgePersistedCache() {
   void persister.removeClient()
 }
 
-/** Drops the cache when the signed-in user is not the one it was written for. */
+/**
+ * Drops the cache unless it was written for the user who is signed in now. An unmarked
+ * cache predates this check, so it is treated as untrusted rather than adopted.
+ */
 export function ensureCacheOwner(userId: string | null) {
   const previous = window.localStorage.getItem(CACHE_OWNER_KEY)
-  if (previous === userId) return
+  if (userId && previous === userId) return
 
-  if (previous !== null) purgePersistedCache()
+  purgePersistedCache()
   if (userId) window.localStorage.setItem(CACHE_OWNER_KEY, userId)
 }
 
@@ -46,7 +49,9 @@ export const persistOptions: Omit<PersistQueryClientOptions, 'queryClient'> = {
   persister,
   maxAge: 24 * 60 * 60 * 1000,
   // Bump when cached shapes change, otherwise old clients rehydrate incompatible data.
-  buster: 'v1',
+  // v2 discards caches written before the profile query was fixed; some of them hold a
+  // null profile that would otherwise keep sending the user back to onboarding.
+  buster: 'v2',
   dehydrateOptions: {
     shouldDehydrateQuery: (query) => query.state.status === 'success',
   },

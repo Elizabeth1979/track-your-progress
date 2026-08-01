@@ -65,7 +65,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: ['profile', userId],
     enabled: Boolean(userId),
     queryFn: async (): Promise<Profile | null> => {
-      const { data, error } = await supabase.from('profiles').select('*').maybeSingle()
+      // profiles is readable family-wide so the invites screen can list co-parents.
+      // Without this filter a second parent joining makes the query return two rows,
+      // maybeSingle() errors, and the app decides the user has no family at all.
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId ?? '')
+        .maybeSingle()
       if (error) throw error
       return data
     },
