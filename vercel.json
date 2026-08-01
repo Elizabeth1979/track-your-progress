@@ -3,7 +3,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "_comment": "Vercel checks the filesystem before applying rewrites, so sw.js, manifest.webmanifest, icons and hashed assets are served directly; only unmatched paths fall through to the SPA shell.",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "headers": [
     {
