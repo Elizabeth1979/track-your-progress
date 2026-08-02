@@ -181,7 +181,7 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  border: 2px solid var(--border-strong);
+  border: 2px solid var(--control-border);
   font-weight: 700;
 }
 

@@ -24,7 +24,7 @@
   inline-size: 16px;
   block-size: 16px;
   border-radius: 50%;
-  border: 2px solid var(--border-strong);
+  border: 2px solid var(--control-border);
   transition: background var(--transition);
 }
 

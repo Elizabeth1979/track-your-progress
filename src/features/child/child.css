@@ -148,7 +148,7 @@
   block-size: 44px;
   flex: none;
   border-radius: 50%;
-  border: 2px solid var(--border-strong);
+  border: 2px solid var(--control-border);
   background: var(--bg);
   display: grid;
   place-items: center;
@@ -168,7 +168,7 @@
   block-size: 44px;
   flex: none;
   border-radius: 50%;
-  border: 2px solid var(--border-strong);
+  border: 2px solid var(--control-border);
   background: var(--bg);
   display: grid;
   place-items: center;

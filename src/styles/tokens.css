@@ -57,6 +57,10 @@
   --surface-accent: var(--brand-50);
   --border: #e6ded0;
   --border-strong: #cfc4b1;
+  /* The outline of an empty control — an unticked checkbox — has to carry 3:1 against
+     the surface behind it to be seen at all (WCAG 1.4.11). --border-strong is tuned for
+     separators and sits near 1.7:1, which reads as no border on a dark screen. */
+  --control-border: #9a8a68;
   --text: #241f33;
   --text-muted: #6b6480;
   --text-inverse: #ffffff;
@@ -74,6 +78,7 @@
   --surface-accent: #2b2440;
   --border: #322b44;
   --border-strong: #4a3f66;
+  --control-border: #7c6ca6;
   --text: #f3f0fa;
   --text-muted: #a79fbd;
   --text-inverse: #17141f;
@@ -95,6 +100,7 @@
     --surface-accent: #2b2440;
     --border: #322b44;
     --border-strong: #4a3f66;
+    --control-border: #7c6ca6;
     --text: #f3f0fa;
     --text-muted: #a79fbd;
     --text-inverse: #17141f;
