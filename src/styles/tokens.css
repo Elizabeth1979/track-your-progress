@@ -40,11 +40,6 @@
   --text-2xl: 2rem;
 
   --tap-target: 48px;
-  /*
-   * Height of the bottom tab bar, shared so the floating action button clears it.
-   * A constant is only safe because tab labels are now clamped to one line; the previous
-   * hard-coded offset broke precisely when a long label wrapped and grew the bar.
-   */
   --tabbar-height: 88px;
   --shadow-sm: 0 1px 2px rgb(30 20 60 / 8%);
   --shadow-md: 0 6px 18px rgb(30 20 60 / 10%);

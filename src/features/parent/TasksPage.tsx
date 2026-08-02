@@ -80,11 +80,20 @@ export function TasksPage() {
             })}
           </ul>
         )}
-      </main>
 
-      <Link className="fab" to="/parent/tasks/new" aria-label={t.taskForm.newTitle}>
-        +
-      </Link>
+        {/*
+          A labelled button in the flow, matching the children, routines and rewards
+          screens. It replaced a floating button, which overlapped the tab bar, hid the
+          last row of the list, and said only "+".
+        */}
+        {visible.length > 0 && (
+          <Link to="/parent/tasks/new" className="block-link">
+            <Button fullWidth variant="secondary">
+              {t.taskForm.newTitle}
+            </Button>
+          </Link>
+        )}
+      </main>
     </>
   )
 }
