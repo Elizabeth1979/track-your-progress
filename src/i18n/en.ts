@@ -264,6 +264,13 @@ export const en: Dictionary = {
     mismatch: 'The codes do not match',
     notSecurityNote: 'The code prevents accidental access. It is not a security measure.',
     skip: 'No code',
+    forgot: 'I forgot the code',
+    forgotTitle: 'Reset the parent code',
+    forgotBody: 'Enter your account password to remove the code.',
+    forgotConfirm: 'Remove code',
+    forgotWrong: 'Wrong password',
+    notSetWarning: 'The parent area is open to anyone — no code is set.',
+    notSetAction: 'Set a code',
   },
 
   invites: {

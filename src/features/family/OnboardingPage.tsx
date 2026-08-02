@@ -4,6 +4,9 @@ import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/app/AuthProvider'
 import { useT } from '@/i18n'
+import { hashPin } from '@/lib/pin'
+import { keys } from '@/lib/queries'
+import { PinPad } from '@/components/PinPad'
 import { Button, Field, Spinner, TextInput } from '@/components/ui'
 import { Avatar, CHILD_COLORS, CHILD_EMOJIS, EmojiPicker } from '@/components/AvatarPicker'
 import { AuthShell } from '@/features/auth/AuthShell'
@@ -28,6 +31,9 @@ export function OnboardingPage() {
   const [drafts, setDrafts] = useState<DraftChild[]>([nextDraft(0)])
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  // Set once the family exists; switches this page to the PIN step.
+  const [newFamilyId, setNewFamilyId] = useState<string | null>(null)
+  const [firstPin, setFirstPin] = useState('')
 
   if (loading || profileLoading) {
     return (
@@ -37,7 +43,35 @@ export function OnboardingPage() {
     )
   }
   if (!session) return <Navigate to="/login" replace />
-  if (profile) return <Navigate to="/child" replace />
+  // Only redirect before the family is made here; afterwards the PIN step owns the page.
+  if (profile && !newFamilyId) return <Navigate to="/child" replace />
+
+  if (newFamilyId) {
+    return (
+      <div className="center-screen">
+        <PinPad
+          title={firstPin ? t.pin.confirmLabel : t.pin.setTitle}
+          subtitle={firstPin ? t.pin.notSecurityNote : t.pin.setSubtitle}
+          error={error}
+          onCancel={() => void navigate('/child', { replace: true })}
+          cancelLabel={t.pin.skip}
+          onComplete={(pin) => {
+            setError('')
+            if (!firstPin) {
+              setFirstPin(pin)
+              return
+            }
+            if (pin !== firstPin) {
+              setFirstPin('')
+              setError(t.pin.mismatch)
+              return
+            }
+            void savePin(pin)
+          }}
+        />
+      </div>
+    )
+  }
 
   function updateDraft(index: number, patch: Partial<DraftChild>) {
     setDrafts((current) =>
@@ -89,6 +123,25 @@ export function OnboardingPage() {
     // and a refresh rehydrates it from localStorage rather than refetching.
     await refreshProfile()
     await queryClient.invalidateQueries()
+
+    // Offer the PIN before leaving. Skipping is allowed, but not being asked at all is
+    // how a family ends up with the parent area permanently open to their children.
+    setNewFamilyId(familyId)
+  }
+
+  async function savePin(pin: string) {
+    if (!newFamilyId) return
+    const hash = await hashPin(pin, newFamilyId)
+    const { error: pinError } = await supabase
+      .from('families')
+      .update({ parent_pin_hash: hash })
+      .eq('id', newFamilyId)
+
+    if (pinError) {
+      setError(t.errors.generic)
+      return
+    }
+    await queryClient.invalidateQueries({ queryKey: keys.family })
     void navigate('/child', { replace: true })
   }
 

@@ -263,6 +263,13 @@ export const he = {
     mismatch: 'הקודים אינם תואמים',
     notSecurityNote: 'הקוד מונע כניסה מקרית בלבד ואינו אמצעי אבטחה.',
     skip: 'בלי קוד',
+    forgot: 'שכחתי את הקוד',
+    forgotTitle: 'איפוס קוד ההורים',
+    forgotBody: 'הזינו את סיסמת החשבון שלכם כדי לבטל את הקוד.',
+    forgotConfirm: 'ביטול הקוד',
+    forgotWrong: 'הסיסמה שגויה',
+    notSetWarning: 'אזור ההורים פתוח לכולם — לא הוגדר קוד.',
+    notSetAction: 'הגדירו קוד',
   },
 
   invites: {

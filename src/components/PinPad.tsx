@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useT } from '@/i18n'
 import { Button } from './ui'
 import './PinPad.css'
@@ -11,12 +11,18 @@ export function PinPad({
   error,
   onComplete,
   onCancel,
+  cancelLabel,
+  secondaryAction,
 }: {
   title: string
   subtitle?: string
   error?: string
   onComplete: (pin: string) => void
   onCancel?: () => void
+  /** Defaults to "cancel"; onboarding uses it to offer skipping the PIN instead. */
+  cancelLabel?: string
+  /** Extra control under the pad — used for "forgot PIN". */
+  secondaryAction?: ReactNode
 }) {
   const t = useT()
   const [pin, setPin] = useState('')
@@ -68,9 +74,11 @@ export function PinPad({
 
       {onCancel && (
         <Button variant="ghost" onClick={onCancel}>
-          {t.common.cancel}
+          {cancelLabel ?? t.common.cancel}
         </Button>
       )}
+
+      {secondaryAction}
     </div>
   )
 }
