@@ -28,6 +28,19 @@ function save(key: string, state: TimerState | null) {
   else localStorage.removeItem(PREFIX + key)
 }
 
+/**
+ * Timer keys carry the date they belong to, so yesterday's entries are dead weight —
+ * and a stale one whose end time has passed makes today's task open in the "finished"
+ * state. Dropping anything that is not for `keepDateKey` keeps both problems away.
+ */
+export function pruneStaleTimers(keepDateKey: string): void {
+  for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+    const storageKey = localStorage.key(index)
+    if (!storageKey?.startsWith(PREFIX)) continue
+    if (!storageKey.endsWith(`-${keepDateKey}`)) localStorage.removeItem(storageKey)
+  }
+}
+
 export type Countdown = {
   remaining: number
   running: boolean
@@ -59,11 +72,13 @@ export function useCountdown(
 
   const running = Boolean(state?.endsAt) && remaining > 0
 
+  // Keyed on `running`, not on endsAt: once the countdown reaches zero endsAt is still
+  // set, so an endsAt-keyed interval would keep re-rendering at 4Hz forever.
   useEffect(() => {
-    if (!state?.endsAt) return
+    if (!running) return
     const id = window.setInterval(() => setNow(Date.now()), 250)
     return () => window.clearInterval(id)
-  }, [state?.endsAt])
+  }, [running])
 
   // Coming back from a background tab must re-sync immediately, not on the next tick.
   useEffect(() => {

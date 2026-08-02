@@ -60,7 +60,9 @@ function TimerView({ entry, onDone }: { entry: DayTask; onDone: () => void }) {
     notifyTimerDone(entry.task.title, t.task.timerDone)
   }, [entry.task.title, t.task.timerDone])
 
-  const timer = useCountdown(`task-${entry.task.id}`, duration, handleFinish)
+  // The date belongs in the key: without it a daily task reopens tomorrow holding
+  // yesterday's expired countdown, so it renders as already finished and chimes on open.
+  const timer = useCountdown(`task-${entry.task.id}-${todayKey()}`, duration, handleFinish)
   useWakeLock(timer.running)
 
   return (
@@ -126,8 +128,13 @@ function SportView({ entry, onDone }: { entry: DayTask; onDone: () => void }) {
     )
   }, [entry.task.title, phase, t.task.restTime, t.task.nextSet])
 
-  // The key changes per set and phase, which resets the countdown for each leg.
-  const timer = useCountdown(`sport-${entry.task.id}-${setIndex}-${phase}`, duration, handleFinish)
+  // The key changes per set and phase, which resets the countdown for each leg. The
+  // date is included for the same reason as the plain timer above.
+  const timer = useCountdown(
+    `sport-${entry.task.id}-${setIndex}-${phase}-${todayKey()}`,
+    duration,
+    handleFinish,
+  )
   useWakeLock(timer.running)
 
   const workoutComplete = lastSet && phase === 'work' && timer.finished

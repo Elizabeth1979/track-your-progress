@@ -11,6 +11,7 @@ import type { Session } from '@supabase/supabase-js'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { clearParentUnlock } from '@/lib/pin'
+import { resetOutbox } from '@/lib/outbox'
 import { ensureCacheOwner, purgePersistedCache } from './queryClient'
 import type { Profile } from '@/types/db'
 
@@ -84,6 +85,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // clear() only empties memory; the persisted copy has to go too or the next
     // person to sign in on this device rehydrates it.
     purgePersistedCache()
+    // Queued offline writes belong to the account that made them, not to the device.
+    await resetOutbox()
   }, [])
 
   const refreshProfile = useCallback(async () => {

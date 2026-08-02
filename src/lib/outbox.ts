@@ -187,7 +187,12 @@ export async function pendingOperations(): Promise<OutboxEntry[]> {
   return db.outbox.orderBy('seq').toArray()
 }
 
-/** Test seam: wipes the queue between test cases. */
+/**
+ * Wipes the queue. Called on sign-out as well as between tests: the queue is keyed to
+ * the browser, not the account, so operations left behind by one parent would otherwise
+ * be replayed under whoever signs in next. RLS rejects them, but the first parent then
+ * loses those completions silently and the second sees a sync failure that is not theirs.
+ */
 export async function resetOutbox(): Promise<void> {
   await db.outbox.clear()
   state = { pending: 0, syncing: false, failed: false }
