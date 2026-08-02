@@ -20,7 +20,12 @@
 
 .list-row__text {
   flex: 1;
-  min-width: 0;
+  min-inline-size: 0;
+  /* Title and meta are spans; without this they render inline and the task name runs
+     straight into the child's name. */
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .list-row__title {
@@ -135,7 +140,8 @@
 
 .fab {
   position: fixed;
-  inset-block-end: calc(84px + env(safe-area-inset-bottom));
+  /* Derived from the bar's own height rather than a guessed constant. */
+  inset-block-end: calc(var(--tabbar-height) + var(--space-3) + env(safe-area-inset-bottom));
   inset-inline-end: var(--space-4);
   z-index: 20;
   inline-size: 56px;

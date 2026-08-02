@@ -51,7 +51,7 @@ export const en: Dictionary = {
     progress: 'Progress',
     settings: 'Settings',
     invites: 'Invites',
-    exitParentMode: 'Leave parent area',
+    exitParentMode: 'Child mode',
     switchChild: 'Switch child',
   },
 

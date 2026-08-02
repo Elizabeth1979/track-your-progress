@@ -50,7 +50,7 @@ export const he = {
     progress: 'התקדמות',
     settings: 'הגדרות',
     invites: 'הזמנות',
-    exitParentMode: 'יציאה מאזור הורים',
+    exitParentMode: 'מצב ילד',
     switchChild: 'החלפת ילד',
   },
 
