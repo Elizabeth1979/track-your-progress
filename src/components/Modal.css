@@ -13,17 +13,36 @@
   backdrop-filter: blur(2px);
 }
 
+/*
+ * Every dialog centres the same three things, so they read as one component rather than
+ * each screen's own arrangement: the title, any standalone preview in the body, and the
+ * footer actions. Form fields inside the body stay start-aligned — a centred label
+ * sitting above a full-width input is harder to scan, not tidier.
+ */
 .modal__head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: var(--space-3);
   padding: var(--space-4);
   border-block-end: 1px solid var(--border);
+  position: relative;
 }
 
 .modal__head h2 {
   font-size: var(--text-lg);
+  text-align: center;
+  /* Leaves room for the close button so a long title centres on the dialog, not on the
+     space left over beside it. */
+  padding-inline: var(--tap-target);
+}
+
+/* Pinned to the inline end so it never shifts the centred title. */
+.modal__head .btn {
+  position: absolute;
+  inset-inline-end: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .modal__body {
@@ -39,8 +58,19 @@
 
 .modal__foot {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   gap: var(--space-2);
   padding: var(--space-4);
   border-block-start: 1px solid var(--border);
+}
+
+/* A standalone preview — the avatar on the child form — sits centred above the fields. */
+.modal__body > .row--center {
+  justify-content: center;
+}
+
+/* The message in a confirm dialog is the whole content, so it centres with the buttons.
+   Scoped to ConfirmDialog: prose inside a form dialog stays start-aligned. */
+.modal__body--prose {
+  text-align: center;
 }

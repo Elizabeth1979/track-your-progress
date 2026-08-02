@@ -139,7 +139,7 @@ export function ChildrenPage() {
       >
         {draft && (
           <>
-            <div className="row">
+            <div className="row row--center">
               <Avatar emoji={draft.emoji} color={draft.color} size="lg" />
             </div>
             <Field label={t.children.nameLabel} htmlFor="childName">

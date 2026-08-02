@@ -1,7 +1,18 @@
+/*
+ * Full viewport height, so the body's `flex: 1` pushes a bottom tab bar to the bottom of
+ * the screen even on a short page. `100%` only worked if every ancestor happened to have
+ * a height, and the bottom padding used to sit *below* the sticky tab bar — leaving a
+ * strip of background under it and lifting it off the edge of the screen.
+ */
 .screen {
-  min-height: 100%;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
+}
+
+/* Screens with no tab bar still need clearance at the bottom, which the bar itself
+   otherwise provides. */
+.screen:not(:has(> .tabbar)) .screen__body {
   padding-block-end: calc(var(--space-7) + env(safe-area-inset-bottom));
 }
 
@@ -57,6 +68,10 @@
 
 .row--between {
   justify-content: space-between;
+}
+
+.row--center {
+  justify-content: center;
 }
 
 .row--wrap {

@@ -10,12 +10,15 @@ export function Modal({
   onClose,
   children,
   footer,
+  prose = false,
 }: {
   open: boolean
   title: string
   onClose: () => void
   children: ReactNode
   footer?: ReactNode
+  /** Centres the body text, for dialogs whose content is a message rather than a form. */
+  prose?: boolean
 }) {
   const ref = useRef<HTMLDialogElement>(null)
 
@@ -34,7 +37,7 @@ export function Modal({
           ✕
         </Button>
       </div>
-      <div className="modal__body">{children}</div>
+      <div className={`modal__body ${prose ? 'modal__body--prose' : ''}`}>{children}</div>
       {footer && <div className="modal__foot">{footer}</div>}
     </dialog>
   )
@@ -63,6 +66,7 @@ export function ConfirmDialog({
       open={open}
       title={title}
       onClose={onCancel}
+      prose
       footer={
         <>
           <Button variant="secondary" onClick={onCancel}>

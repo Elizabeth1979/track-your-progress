@@ -1,6 +1,12 @@
+/*
+ * Centred rather than packed to the start, so a row that does not divide evenly — eight
+ * colours across a width that fits seven — leaves its remainder centred underneath
+ * instead of stranded against one edge.
+ */
 .picker {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: var(--space-2);
 }
 
@@ -17,6 +23,18 @@
 .picker__emoji.is-active {
   border-color: var(--primary);
   transform: scale(1.06);
+}
+
+/*
+ * The eight colours wrap to 7 + 1 at phone widths, leaving one swatch alone on its own
+ * line. A fixed four-column grid divides evenly instead, giving two balanced rows.
+ */
+.picker--colors {
+  display: grid;
+  grid-template-columns: repeat(4, var(--tap-target));
+  justify-content: center;
+  justify-items: center;
+  gap: var(--space-3) var(--space-2);
 }
 
 .picker__color {

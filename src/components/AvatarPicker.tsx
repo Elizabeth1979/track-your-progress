@@ -59,7 +59,7 @@ export function ColorPicker({
   label: string
 }) {
   return (
-    <div className="picker" role="radiogroup" aria-label={label}>
+    <div className="picker picker--colors" role="radiogroup" aria-label={label}>
       {CHILD_COLORS.map((color) => (
         <button
           key={color}
