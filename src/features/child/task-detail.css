@@ -118,3 +118,75 @@
   font-weight: 600;
   color: var(--text-muted);
 }
+
+/*
+ * One row per set, ticked off as the child works through them. Rows are buttons so a
+ * mis-tap can be undone by tapping again.
+ */
+.setlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.setrow {
+  inline-size: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-block-size: var(--tap-target);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  font: inherit;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.setrow.is-current {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.setrow.is-done {
+  background: var(--surface-success, var(--surface-accent));
+  border-color: var(--green-500, var(--primary));
+}
+
+.setrow__num {
+  inline-size: 28px;
+  block-size: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--bg-sunken);
+  font-weight: 700;
+  font-size: var(--text-sm);
+}
+
+.setrow__target {
+  font-weight: 600;
+}
+
+.setrow__check {
+  inline-size: 28px;
+  block-size: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  font-weight: 700;
+}
+
+.setrow.is-done .setrow__check {
+  background: var(--green-500, var(--primary));
+  border-color: transparent;
+  color: #fff;
+}

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useChildren, useToggleChecklistItem, useToggleCompletion } from '@/lib/queries'
 import { formatDuration, todayKey } from '@/lib/dates'
@@ -108,6 +108,49 @@ function TimerView({ entry, onDone }: { entry: DayTask; onDone: () => void }) {
   )
 }
 
+const SETS_PREFIX = 'kidtasks.sets.'
+
+/**
+ * Which sets of a workout are ticked off, kept in localStorage under the day it belongs
+ * to. A child who closes the app between sets should come back to their place, and the
+ * date in the key means tomorrow starts clean.
+ */
+function useSetProgress(
+  taskId: string,
+  dateKey: string,
+): [Set<number>, (next: Set<number>) => void] {
+  const storageKey = `${SETS_PREFIX}${taskId}-${dateKey}`
+
+  const [done, setDone] = useState<Set<number>>(() => {
+    try {
+      const raw = localStorage.getItem(storageKey)
+      return raw ? new Set(JSON.parse(raw) as number[]) : new Set()
+    } catch {
+      return new Set()
+    }
+  })
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey)
+      setDone(raw ? new Set(JSON.parse(raw) as number[]) : new Set())
+    } catch {
+      setDone(new Set())
+    }
+  }, [storageKey])
+
+  const update = useCallback(
+    (next: Set<number>) => {
+      setDone(next)
+      if (next.size === 0) localStorage.removeItem(storageKey)
+      else localStorage.setItem(storageKey, JSON.stringify([...next]))
+    },
+    [storageKey],
+  )
+
+  return [done, update]
+}
+
 function SportView({ entry, onDone }: { entry: DayTask; onDone: () => void }) {
   const t = useT()
   const totalSets = entry.task.sets_count ?? 1
@@ -118,13 +161,15 @@ function SportView({ entry, onDone }: { entry: DayTask; onDone: () => void }) {
   const reps = entry.task.reps
   const isReps = reps != null
 
-  const [setIndex, setSetIndex] = useState(1)
-  const [phase, setPhase] = useState<'work' | 'rest'>('work')
-  const [repsDone, setRepsDone] = useState(false)
+  // Which sets are ticked off. Kept per task and per day so a child who closes the app
+  // mid-workout comes back to the same place rather than starting over.
+  const [doneSets, setDoneSets] = useSetProgress(entry.task.id, todayKey())
+  const [resting, setResting] = useState(false)
 
-  const duration = phase === 'work' ? setSeconds : restSeconds
-  const lastSet = setIndex >= totalSets
-  const showTimer = phase === 'rest' || !isReps
+  const setIndex = Math.min(doneSets.size + 1, totalSets)
+  const phase: 'work' | 'rest' = resting ? 'rest' : 'work'
+  const duration = resting ? restSeconds : setSeconds
+  const workoutComplete = doneSets.size >= totalSets
 
   const handleFinish = useCallback(() => {
     playChime()
@@ -143,71 +188,87 @@ function SportView({ entry, onDone }: { entry: DayTask; onDone: () => void }) {
   )
   useWakeLock(timer.running)
 
-  const workoutComplete = isReps
-    ? repsDone
-    : lastSet && phase === 'work' && timer.finished
-
-  function advance() {
+  /** Ticking a set off starts the rest that follows it, unless it was the last one. */
+  function completeSet(setNumber: number) {
     timer.reset()
-    if (phase === 'work') {
-      if (lastSet) {
-        // Reps have no countdown to mark the end, so tapping through the last set is
-        // what completes the workout.
-        if (isReps) setRepsDone(true)
-        return
-      }
-      if (restSeconds > 0) setPhase('rest')
-      else setSetIndex((current) => current + 1)
-      return
-    }
-    setPhase('work')
-    setSetIndex((current) => current + 1)
+    const next = new Set(doneSets)
+    next.add(setNumber)
+    setDoneSets(next)
+    setResting(next.size < totalSets && restSeconds > 0)
+  }
+
+  function untickSet(setNumber: number) {
+    timer.reset()
+    const next = new Set(doneSets)
+    next.delete(setNumber)
+    setDoneSets(next)
+    setResting(false)
+  }
+
+  function endRest() {
+    timer.reset()
+    setResting(false)
   }
 
   return (
     <>
       <p className="sport-phase">
-        {t.task.setOf(setIndex, totalSets)} • {phase === 'work' ? t.task.workTime : t.task.restTime}
+        {workoutComplete
+          ? t.task.sportDone
+          : `${t.task.setOf(setIndex, totalSets)} • ${resting ? t.task.restTime : t.task.workTime}`}
       </p>
 
-      {showTimer ? (
-        <div
-          className={`timer ${phase === 'rest' ? 'is-rest' : ''} ${timer.finished ? 'is-finished' : ''}`}
-        >
+      {/*
+        Every set is a row the child ticks off, rather than one button for the whole
+        workout: it shows what is left, and lets them undo a mis-tap.
+      */}
+      <ul className="setlist">
+        {Array.from({ length: totalSets }, (_, index) => index + 1).map((setNumber) => {
+          const isDone = doneSets.has(setNumber)
+          const isCurrent = !workoutComplete && setNumber === setIndex
+          return (
+            <li key={setNumber}>
+              <button
+                type="button"
+                className={`setrow ${isDone ? 'is-done' : ''} ${isCurrent ? 'is-current' : ''}`}
+                onClick={() => (isDone ? untickSet(setNumber) : completeSet(setNumber))}
+                aria-pressed={isDone}
+              >
+                <span className="setrow__num">{setNumber}</span>
+                <span className="setrow__target">
+                  {isReps ? `${reps} ${t.task.repsUnit}` : formatDuration(setSeconds)}
+                </span>
+                <span className="setrow__check" aria-hidden="true">
+                  {isDone ? '✓' : ''}
+                </span>
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+
+      {/* The rest countdown only appears between sets, where it is the thing to watch. */}
+      {resting && (
+        <div className={`timer is-rest ${timer.finished ? 'is-finished' : ''}`}>
           <span className="timer__value">{formatDuration(timer.remaining)}</span>
-        </div>
-      ) : (
-        <div className="timer">
-          <span className="timer__value">{reps}</span>
-          <span className="timer__unit">{t.task.repsUnit}</span>
+          <span className="timer__unit">{t.task.restTime}</span>
         </div>
       )}
 
       <div className="row" style={{ justifyContent: 'center' }}>
-        {/* Rep sets are child-paced: one button, tapped when the set is done. */}
-        {!showTimer && !workoutComplete && (
-          <Button size="lg" onClick={advance}>
-            {t.task.setDone}
-          </Button>
-        )}
-        {showTimer && !timer.running && timer.remaining === duration && (
+        {resting && !timer.running && timer.remaining === duration && (
           <Button size="lg" onClick={timer.start}>
             {t.task.start}
           </Button>
         )}
-        {showTimer && timer.running && (
+        {resting && timer.running && (
           <Button size="lg" variant="secondary" onClick={timer.pause}>
             {t.task.pause}
           </Button>
         )}
-        {showTimer && !timer.running && timer.remaining > 0 && timer.remaining < duration && (
-          <Button size="lg" onClick={timer.resume}>
-            {t.task.resume}
-          </Button>
-        )}
-        {showTimer && timer.finished && !workoutComplete && (
-          <Button size="lg" onClick={advance}>
-            {phase === 'work' && restSeconds > 0 ? t.task.restTime : t.task.nextSet}
+        {resting && (
+          <Button size="lg" variant={timer.finished ? 'primary' : 'ghost'} onClick={endRest}>
+            {t.task.nextSet}
           </Button>
         )}
       </div>
