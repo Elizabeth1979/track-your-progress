@@ -6,3 +6,6 @@ export function PrivacyPage() {
   const t = useT()
   return <LegalPage title={t.legal.privacyTitle} he={PRIVACY_HE} en={PRIVACY_EN} />
 }
+
+// Default export so the router can code-split this page into its own chunk.
+export default PrivacyPage

@@ -45,6 +45,23 @@ export default defineConfig({
       devOptions: { enabled: false, type: 'module' },
     }),
   ],
+  build: {
+    // Vendor code changes far less often than app code; keeping it in its own chunks
+    // means shipping a fix does not invalidate the cached copy of React or Supabase.
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          supabase: ['@supabase/supabase-js'],
+          query: [
+            '@tanstack/react-query',
+            '@tanstack/react-query-persist-client',
+            '@tanstack/query-sync-storage-persister',
+          ],
+        },
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     globals: true,

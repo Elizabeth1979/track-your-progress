@@ -1,4 +1,4 @@
-import Dexie, { type EntityTable } from 'dexie'
+import { idbAdd, idbAll, idbClear, idbCount, idbDelete, idbFirst, idbUpdate } from './idb'
 import { supabase } from './supabase'
 
 /**
@@ -24,12 +24,6 @@ export type OutboxEntry = {
   attempts: number
   lastError?: string
 }
-
-const db = new Dexie('kidtasks') as Dexie & {
-  outbox: EntityTable<OutboxEntry, 'seq'>
-}
-
-db.version(1).stores({ outbox: '++seq, createdAt' })
 
 export type SyncState = {
   pending: number
@@ -58,11 +52,11 @@ export function getSyncState(): SyncState {
 }
 
 async function refreshPendingCount() {
-  publish({ pending: await db.outbox.count() })
+  publish({ pending: await idbCount() })
 }
 
 export async function enqueue(op: OutboxOperation): Promise<void> {
-  await db.outbox.add({ op, createdAt: Date.now(), attempts: 0 } as OutboxEntry)
+  await idbAdd({ op, createdAt: Date.now(), attempts: 0 })
   await refreshPendingCount()
   void flushOutbox()
 }
@@ -151,30 +145,30 @@ async function runFlush(): Promise<void> {
   try {
     // Strict insertion order: a "remove" queued after an "add" must not overtake it.
     for (;;) {
-      const entry = await db.outbox.orderBy('seq').first()
+      const entry = await idbFirst<OutboxEntry>()
       if (!entry) break
 
       try {
         await applyOperation(entry.op)
-        await db.outbox.delete(entry.seq)
+        await idbDelete(entry.seq)
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         const attempts = entry.attempts + 1
 
         if (!isRetryable(error) || attempts >= MAX_ATTEMPTS) {
           // Drop it rather than wedge every later operation behind a permanent failure.
-          await db.outbox.delete(entry.seq)
+          await idbDelete(entry.seq)
           sawFailure = true
           continue
         }
 
-        await db.outbox.update(entry.seq, { attempts, lastError: message })
+        await idbUpdate<OutboxEntry>(entry.seq, { attempts, lastError: message })
         sawFailure = true
         break
       }
     }
   } finally {
-    const pending = await db.outbox.count()
+    const pending = await idbCount()
     publish({ syncing: false, pending, failed: sawFailure })
   }
 }
@@ -184,7 +178,7 @@ export async function clearFailedFlag(): Promise<void> {
 }
 
 export async function pendingOperations(): Promise<OutboxEntry[]> {
-  return db.outbox.orderBy('seq').toArray()
+  return idbAll<OutboxEntry>()
 }
 
 /**
@@ -194,7 +188,7 @@ export async function pendingOperations(): Promise<OutboxEntry[]> {
  * loses those completions silently and the second sees a sync failure that is not theirs.
  */
 export async function resetOutbox(): Promise<void> {
-  await db.outbox.clear()
+  await idbClear()
   state = { pending: 0, syncing: false, failed: false }
 }
 

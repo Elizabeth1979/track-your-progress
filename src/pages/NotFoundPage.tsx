@@ -18,3 +18,6 @@ export function NotFoundPage() {
     </main>
   )
 }
+
+// Default export so the router can code-split this page into its own chunk.
+export default NotFoundPage

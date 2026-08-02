@@ -1,9 +1,15 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import type { ReactNode } from 'react'
+import { lazy, Suspense, type ReactNode } from 'react'
 import { useAuth } from './app/AuthProvider'
 import { Spinner } from './components/ui'
 import { useT } from './i18n'
 
+/*
+ * Child mode and the sign-in screens load up front: a child opening the app should not
+ * wait on a second download to see their day. Everything a parent uses — the dashboard,
+ * the editors, settings — and the static legal pages are split into their own chunks and
+ * fetched on the way in, so a phone left in child mode never downloads them at all.
+ */
 import { LoginPage } from './features/auth/LoginPage'
 import { SignupPage } from './features/auth/SignupPage'
 import { VerifyEmailPage } from './features/auth/VerifyEmailPage'
@@ -18,23 +24,23 @@ import { RoutinePlayPage } from './features/child/RoutinePlayPage'
 import { ChildRewardsPage } from './features/child/ChildRewardsPage'
 import { ChildJournalPage } from './features/child/ChildJournalPage'
 
-import { ParentLayout } from './features/parent/ParentLayout'
-import { DashboardPage } from './features/parent/DashboardPage'
-import { ChildrenPage } from './features/parent/ChildrenPage'
-import { TasksPage } from './features/parent/TasksPage'
-import { TaskFormPage } from './features/parent/TaskFormPage'
-import { RoutinesPage } from './features/parent/RoutinesPage'
-import { RewardsPage } from './features/parent/RewardsPage'
-import { ParentJournalPage } from './features/parent/ParentJournalPage'
-import { ProgressPage } from './features/parent/ProgressPage'
-import { InvitesPage } from './features/parent/InvitesPage'
-import { SettingsPage } from './features/parent/SettingsPage'
+const ParentLayout = lazy(() => import('./features/parent/ParentLayout'))
+const DashboardPage = lazy(() => import('./features/parent/DashboardPage'))
+const ChildrenPage = lazy(() => import('./features/parent/ChildrenPage'))
+const TasksPage = lazy(() => import('./features/parent/TasksPage'))
+const TaskFormPage = lazy(() => import('./features/parent/TaskFormPage'))
+const RoutinesPage = lazy(() => import('./features/parent/RoutinesPage'))
+const RewardsPage = lazy(() => import('./features/parent/RewardsPage'))
+const ParentJournalPage = lazy(() => import('./features/parent/ParentJournalPage'))
+const ProgressPage = lazy(() => import('./features/parent/ProgressPage'))
+const InvitesPage = lazy(() => import('./features/parent/InvitesPage'))
+const SettingsPage = lazy(() => import('./features/parent/SettingsPage'))
 
-import { PrivacyPage } from './pages/PrivacyPage'
-import { TermsPage } from './pages/TermsPage'
-import { DeleteAccountRequestPage } from './pages/DeleteAccountRequestPage'
-import { InstallPage } from './pages/InstallPage'
-import { NotFoundPage } from './pages/NotFoundPage'
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
+const TermsPage = lazy(() => import('./pages/TermsPage'))
+const DeleteAccountRequestPage = lazy(() => import('./pages/DeleteAccountRequestPage'))
+const InstallPage = lazy(() => import('./pages/InstallPage'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 function FullScreenLoader() {
   const t = useT()
@@ -67,78 +73,81 @@ function RedirectHome() {
 
 export function AppRoutes() {
   return (
-    <Routes>
-      <Route path="/" element={<RedirectHome />} />
+    // Covers the split-out chunks while they download; eager routes never suspend.
+    <Suspense fallback={<FullScreenLoader />}>
+      <Routes>
+        <Route path="/" element={<RedirectHome />} />
 
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/verify-email" element={<VerifyEmailPage />} />
-      <Route path="/onboarding" element={<OnboardingPage />} />
-      <Route path="/join/:code" element={<JoinPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/onboarding" element={<OnboardingPage />} />
+        <Route path="/join/:code" element={<JoinPage />} />
 
-      <Route
-        path="/child"
-        element={
-          <RequireFamily>
-            <ChildPickerPage />
-          </RequireFamily>
-        }
-      />
-      <Route
-        path="/child/:childId"
-        element={
-          <RequireFamily>
-            <ChildLayout />
-          </RequireFamily>
-        }
-      >
-        <Route index element={<MyDayPage />} />
-        <Route path="rewards" element={<ChildRewardsPage />} />
-        <Route path="journal" element={<ChildJournalPage />} />
-      </Route>
-      <Route
-        path="/child/:childId/task/:taskId"
-        element={
-          <RequireFamily>
-            <TaskDetailPage />
-          </RequireFamily>
-        }
-      />
-      <Route
-        path="/child/:childId/routine/:routineId"
-        element={
-          <RequireFamily>
-            <RoutinePlayPage />
-          </RequireFamily>
-        }
-      />
+        <Route
+          path="/child"
+          element={
+            <RequireFamily>
+              <ChildPickerPage />
+            </RequireFamily>
+          }
+        />
+        <Route
+          path="/child/:childId"
+          element={
+            <RequireFamily>
+              <ChildLayout />
+            </RequireFamily>
+          }
+        >
+          <Route index element={<MyDayPage />} />
+          <Route path="rewards" element={<ChildRewardsPage />} />
+          <Route path="journal" element={<ChildJournalPage />} />
+        </Route>
+        <Route
+          path="/child/:childId/task/:taskId"
+          element={
+            <RequireFamily>
+              <TaskDetailPage />
+            </RequireFamily>
+          }
+        />
+        <Route
+          path="/child/:childId/routine/:routineId"
+          element={
+            <RequireFamily>
+              <RoutinePlayPage />
+            </RequireFamily>
+          }
+        />
 
-      <Route
-        path="/parent"
-        element={
-          <RequireFamily>
-            <ParentLayout />
-          </RequireFamily>
-        }
-      >
-        <Route index element={<DashboardPage />} />
-        <Route path="children" element={<ChildrenPage />} />
-        <Route path="tasks" element={<TasksPage />} />
-        <Route path="tasks/new" element={<TaskFormPage />} />
-        <Route path="tasks/:taskId" element={<TaskFormPage />} />
-        <Route path="routines" element={<RoutinesPage />} />
-        <Route path="rewards" element={<RewardsPage />} />
-        <Route path="journal" element={<ParentJournalPage />} />
-        <Route path="progress" element={<ProgressPage />} />
-        <Route path="invites" element={<InvitesPage />} />
-        <Route path="settings" element={<SettingsPage />} />
-      </Route>
+        <Route
+          path="/parent"
+          element={
+            <RequireFamily>
+              <ParentLayout />
+            </RequireFamily>
+          }
+        >
+          <Route index element={<DashboardPage />} />
+          <Route path="children" element={<ChildrenPage />} />
+          <Route path="tasks" element={<TasksPage />} />
+          <Route path="tasks/new" element={<TaskFormPage />} />
+          <Route path="tasks/:taskId" element={<TaskFormPage />} />
+          <Route path="routines" element={<RoutinesPage />} />
+          <Route path="rewards" element={<RewardsPage />} />
+          <Route path="journal" element={<ParentJournalPage />} />
+          <Route path="progress" element={<ProgressPage />} />
+          <Route path="invites" element={<InvitesPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+        </Route>
 
-      <Route path="/privacy" element={<PrivacyPage />} />
-      <Route path="/terms" element={<TermsPage />} />
-      <Route path="/delete-account" element={<DeleteAccountRequestPage />} />
-      <Route path="/install" element={<InstallPage />} />
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/delete-account" element={<DeleteAccountRequestPage />} />
+        <Route path="/install" element={<InstallPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </Suspense>
   )
 }
