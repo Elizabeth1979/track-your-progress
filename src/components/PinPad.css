@@ -2,9 +2,17 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
   text-align: center;
-  padding: var(--space-5);
+  padding: var(--space-4) var(--space-3);
+}
+
+.pinpad h1 {
+  font-size: var(--text-xl);
+}
+
+.pinpad .muted {
+  max-inline-size: 32ch;
 }
 
 .pinpad__dots {
@@ -25,14 +33,25 @@
   border-color: var(--primary);
 }
 
+/*
+ * Always LTR, even in Hebrew. Digits are not mirrored in RTL languages, so a keypad
+ * laid out by the page direction comes out as 3-2-1 / 6-5-4 / 9-8-7 — which is both
+ * wrong and easy to mis-tap. Forcing the direction here also puts the blank cell on
+ * the correct side, so 0 sits centred under 8 with backspace to its right.
+ */
 .pinpad__grid {
+  direction: ltr;
   display: grid;
-  grid-template-columns: repeat(3, 76px);
+  grid-template-columns: repeat(3, minmax(0, 76px));
+  justify-content: center;
   gap: var(--space-3);
+  inline-size: 100%;
+  max-inline-size: 260px;
 }
 
 .pinpad__grid button {
-  block-size: 68px;
+  /* Shrinks on short screens so all four rows and the action below stay reachable. */
+  block-size: clamp(52px, 8.5dvh, 68px);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   background: var(--bg-elevated);
