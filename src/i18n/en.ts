@@ -69,6 +69,7 @@ export const en: Dictionary = {
     passwordHint: 'At least 8 characters',
     showPassword: 'Show password',
     hidePassword: 'Hide password',
+    signedInAs: 'Signed in as',
     verifyTitle: 'Confirm your email',
     verifyBody: 'We sent you a confirmation email. Confirm it, then log in.',
     backToLogin: 'Back to log in',

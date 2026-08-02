@@ -68,6 +68,7 @@ export const he = {
     passwordHint: 'לפחות 8 תווים',
     showPassword: 'הצג סיסמה',
     hidePassword: 'הסתר סיסמה',
+    signedInAs: 'מחוברים כ־',
     verifyTitle: 'אישור כתובת האימייל',
     verifyBody: 'שלחנו לכם מייל אישור. אשרו אותו ואז התחברו.',
     backToLogin: 'חזרה להתחברות',
