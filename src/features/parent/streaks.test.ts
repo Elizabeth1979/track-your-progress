@@ -19,6 +19,7 @@ function task(id: string, days: number[]): Task {
     timer_seconds: null,
     sets_count: null,
     set_seconds: null,
+    reps: null,
     rest_seconds: null,
     stars_value: 1,
     requires_approval: false,

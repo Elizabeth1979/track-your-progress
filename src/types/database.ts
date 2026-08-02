@@ -415,6 +415,7 @@ export type Database = {
           icon: string
           id: string
           is_active: boolean
+          reps: number | null
           requires_approval: boolean
           rest_seconds: number | null
           routine_id: string | null
@@ -436,6 +437,7 @@ export type Database = {
           icon?: string
           id?: string
           is_active?: boolean
+          reps?: number | null
           requires_approval?: boolean
           rest_seconds?: number | null
           routine_id?: string | null
@@ -457,6 +459,7 @@ export type Database = {
           icon?: string
           id?: string
           is_active?: boolean
+          reps?: number | null
           requires_approval?: boolean
           rest_seconds?: number | null
           routine_id?: string | null

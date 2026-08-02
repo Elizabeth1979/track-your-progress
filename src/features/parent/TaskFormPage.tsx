@@ -20,6 +20,9 @@ import { ConfirmDialog } from '@/components/Modal'
 import type { TaskType, TimeSlot } from '@/types/db'
 import './parent.css'
 
+/** How a single set is measured: a rep count, or a countdown in seconds. */
+type SetMode = 'reps' | 'time'
+
 type Draft = {
   childId: string
   routineId: string
@@ -31,7 +34,9 @@ type Draft = {
   days: number[]
   timerMinutes: number
   setsCount: number
+  setMode: SetMode
   setSeconds: number
+  reps: number
   restSeconds: number
   stars: number
   requiresApproval: boolean
@@ -50,7 +55,9 @@ const EMPTY: Draft = {
   days: [0, 1, 2, 3, 4, 5, 6],
   timerMinutes: 2,
   setsCount: 3,
+  setMode: 'reps',
   setSeconds: 30,
+  reps: 10,
   restSeconds: 30,
   stars: 1,
   requiresApproval: false,
@@ -92,7 +99,10 @@ export function TaskFormPage() {
         days: [...task.days_of_week].sort(),
         timerMinutes: Math.max(1, Math.round((task.timer_seconds ?? 120) / 60)),
         setsCount: task.sets_count ?? 3,
+        // Whichever column the task was saved with decides the mode it opens in.
+        setMode: task.reps != null ? 'reps' : 'time',
         setSeconds: task.set_seconds ?? 30,
+        reps: task.reps ?? 10,
         restSeconds: task.rest_seconds ?? 30,
         stars: task.stars_value,
         requiresApproval: task.requires_approval,
@@ -125,7 +135,9 @@ export function TaskFormPage() {
         days_of_week: value.days.length > 0 ? value.days : [0, 1, 2, 3, 4, 5, 6],
         timer_seconds: value.type === 'timer' ? value.timerMinutes * 60 : null,
         sets_count: value.type === 'sport' ? value.setsCount : null,
-        set_seconds: value.type === 'sport' ? value.setSeconds : null,
+        // Exactly one of these is set for a sport task; the DB constraint enforces it.
+        set_seconds: value.type === 'sport' && value.setMode === 'time' ? value.setSeconds : null,
+        reps: value.type === 'sport' && value.setMode === 'reps' ? value.reps : null,
         rest_seconds: value.type === 'sport' ? value.restSeconds : null,
         stars_value: value.stars,
         requires_approval: value.requiresApproval,
@@ -324,18 +336,49 @@ export function TaskFormPage() {
                   }
                 />
               </Field>
-              <Field label={`${t.taskForm.setSecondsLabel} (${t.common.seconds})`} htmlFor="setSeconds">
-                <TextInput
-                  id="setSeconds"
-                  type="number"
-                  min={5}
-                  max={3600}
-                  value={draft.setSeconds}
-                  onChange={(event) =>
-                    setDraft({ ...draft, setSeconds: Number(event.target.value) })
-                  }
+              {/* A set is measured one way or the other: seconds for a plank, reps for squats. */}
+              <Field label={t.taskForm.setModeLabel}>
+                <SegmentedControl
+                  ariaLabel={t.taskForm.setModeLabel}
+                  value={draft.setMode}
+                  onChange={(next) => setDraft({ ...draft, setMode: next as SetMode })}
+                  options={[
+                    { value: 'reps', label: t.taskForm.setModeReps },
+                    { value: 'time', label: t.taskForm.setModeTime },
+                  ]}
                 />
               </Field>
+
+              {draft.setMode === 'reps' ? (
+                <Field label={t.taskForm.repsLabel} htmlFor="reps">
+                  <TextInput
+                    id="reps"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={500}
+                    value={draft.reps}
+                    onChange={(event) => setDraft({ ...draft, reps: Number(event.target.value) })}
+                  />
+                </Field>
+              ) : (
+                <Field
+                  label={`${t.taskForm.setSecondsLabel} (${t.common.seconds})`}
+                  htmlFor="setSeconds"
+                >
+                  <TextInput
+                    id="setSeconds"
+                    type="number"
+                    inputMode="numeric"
+                    min={5}
+                    max={3600}
+                    value={draft.setSeconds}
+                    onChange={(event) =>
+                      setDraft({ ...draft, setSeconds: Number(event.target.value) })
+                    }
+                  />
+                </Field>
+              )}
               <Field
                 label={`${t.taskForm.restSecondsLabel} (${t.common.seconds})`}
                 htmlFor="restSeconds"

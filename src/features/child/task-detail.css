@@ -110,3 +110,11 @@
 .routine-progress span.is-current {
   background: var(--primary);
 }
+
+/* Sits under the rep count where a countdown would otherwise be. */
+.timer__unit {
+  display: block;
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-muted);
+}
