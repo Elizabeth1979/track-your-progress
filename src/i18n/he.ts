@@ -206,8 +206,10 @@ export const he = {
   dashboard: {
     title: 'לוח בקרה',
     todayProgress: 'התקדמות היום',
-    pendingApprovals: 'ממתין לאישור',
-    noPending: 'אין בקשות ממתינות',
+    pendingApprovals: 'מחכה לאישור שלכם',
+    // Says what would appear here, not just that nothing has: the section only fills up
+    // for families who switched a task to "needs a parent's OK" or who use rewards.
+    noPending: 'כשהילדים יסמנו משימה שדורשת אישור, או יבקשו פרס — זה יופיע כאן.',
     approve: 'אישור',
     reject: 'דחייה',
     approveTask: (child: string, task: string) => `${child} סיימ/ה: ${task}`,

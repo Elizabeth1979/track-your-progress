@@ -6,6 +6,7 @@ import {
   useChildren,
   useCompletions,
   useRedemptions,
+  useRewards,
   useTasks,
 } from '@/lib/queries'
 import { supabase } from '@/lib/supabase'
@@ -25,6 +26,7 @@ export function DashboardPage() {
   const { data: tasks } = useTasks()
   const { data: completions } = useCompletions(today)
   const { data: redemptions } = useRedemptions()
+  const { data: rewards } = useRewards()
   useChecklistItems()
 
   const approveTask = useMutation({
@@ -68,6 +70,15 @@ export function DashboardPage() {
   )
   const pendingRedemptions = (redemptions ?? []).filter((row) => row.status === 'pending')
   const nothingPending = pendingCompletions.length === 0 && pendingRedemptions.length === 0
+
+  /*
+   * Two opt-in features feed this section: tasks switched to "needs a parent's OK", and
+   * reward redemptions. A family using neither can never see anything here, so the
+   * section is hidden for them rather than sitting empty and unexplained.
+   */
+  const usesApprovals =
+    (tasks ?? []).some((task) => task.requires_approval) || (rewards ?? []).length > 0
+  const showApprovals = usesApprovals || !nothingPending
 
   function childName(childId: string) {
     return children?.find((child) => child.id === childId)?.name ?? ''
@@ -122,63 +133,75 @@ export function DashboardPage() {
           />
         )}
 
-        <h2 className="section-title">{t.dashboard.pendingApprovals}</h2>
-        {nothingPending ? (
-          <EmptyState icon="✅" title={t.dashboard.noPending} />
-        ) : (
-          <ul className="list">
-            {pendingCompletions.map((completion) => {
-              const task = tasks?.find((entry) => entry.id === completion.task_id)
-              return (
-                <li key={completion.id}>
-                  <Card className="approval-row">
-                    <span className="grow">
-                      {t.dashboard.approveTask(
-                        childName(completion.child_id),
-                        task?.title ?? '',
-                      )}
-                    </span>
-                    <Button
-                      onClick={() => approveTask.mutate({ id: completion.id, approve: true })}
-                    >
-                      {t.dashboard.approve}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => approveTask.mutate({ id: completion.id, approve: false })}
-                    >
-                      {t.dashboard.reject}
-                    </Button>
-                  </Card>
-                </li>
-              )
-            })}
+        {showApprovals && (
+          <>
+            <h2 className="section-title">{t.dashboard.pendingApprovals}</h2>
+            {nothingPending ? (
+              <p className="section-note">{t.dashboard.noPending}</p>
+            ) : (
+              <ul className="list">
+                {pendingCompletions.map((completion) => {
+                  const task = tasks?.find((entry) => entry.id === completion.task_id)
+                  return (
+                    <li key={completion.id}>
+                      <Card className="approval-row">
+                        <span className="grow">
+                          {t.dashboard.approveTask(
+                            childName(completion.child_id),
+                            task?.title ?? '',
+                          )}
+                        </span>
+                        <Button
+                          onClick={() =>
+                            approveTask.mutate({ id: completion.id, approve: true })
+                          }
+                        >
+                          {t.dashboard.approve}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={() =>
+                            approveTask.mutate({ id: completion.id, approve: false })
+                          }
+                        >
+                          {t.dashboard.reject}
+                        </Button>
+                      </Card>
+                    </li>
+                  )
+                })}
 
-            {pendingRedemptions.map((redemption) => (
-              <li key={redemption.id}>
-                <Card className="approval-row">
-                  <span className="grow">
-                    {t.dashboard.redemptionRequest(
-                      childName(redemption.child_id),
-                      redemption.reward_title,
-                    )}{' '}
-                    ⭐{redemption.star_cost}
-                  </span>
-                  <Button
-                    onClick={() => resolveRedemption.mutate({ id: redemption.id, approve: true })}
-                  >
-                    {t.dashboard.approve}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => resolveRedemption.mutate({ id: redemption.id, approve: false })}
-                  >
-                    {t.dashboard.reject}
-                  </Button>
-                </Card>
-              </li>
-            ))}
-          </ul>
+                {pendingRedemptions.map((redemption) => (
+                  <li key={redemption.id}>
+                    <Card className="approval-row">
+                      <span className="grow">
+                        {t.dashboard.redemptionRequest(
+                          childName(redemption.child_id),
+                          redemption.reward_title,
+                        )}{' '}
+                        ⭐{redemption.star_cost}
+                      </span>
+                      <Button
+                        onClick={() =>
+                          resolveRedemption.mutate({ id: redemption.id, approve: true })
+                        }
+                      >
+                        {t.dashboard.approve}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() =>
+                          resolveRedemption.mutate({ id: redemption.id, approve: false })
+                        }
+                      >
+                        {t.dashboard.reject}
+                      </Button>
+                    </Card>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
         )}
 
         <h2 className="section-title">{t.dashboard.quickActions}</h2>

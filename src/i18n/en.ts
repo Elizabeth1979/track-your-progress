@@ -207,8 +207,10 @@ export const en: Dictionary = {
   dashboard: {
     title: 'Dashboard',
     todayProgress: "Today's progress",
-    pendingApprovals: 'Waiting for approval',
-    noPending: 'Nothing waiting',
+    pendingApprovals: 'Waiting for your OK',
+    // Says what would appear here, not just that nothing has: the section only fills up
+    // for families who switched a task to "needs a parent's OK" or who use rewards.
+    noPending: 'When a child finishes a task that needs your OK, or asks for a reward, it shows up here.',
     approve: 'Approve',
     reject: 'Reject',
     approveTask: (child: string, task: string) => `${child} finished: ${task}`,
